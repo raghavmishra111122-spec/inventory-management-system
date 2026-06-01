@@ -6,13 +6,14 @@ from app.db import Base, engine, get_db
 from app.config import settings
 
 # Modular routers import
-from app.routers import products, customers, orders, dashboard
+from app.routers import products, customers, orders, dashboard, auth
 
 app = FastAPI(
     title="Inventory & Order Management System API",
     description="Production-Ready backend database API orchestrator.",
     version="1.0.0"
 )
+
 
 # Automatically build database schema on application startup
 @app.on_event("startup")
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 # Register modular routes
+app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(customers.router)
 app.include_router(orders.router)

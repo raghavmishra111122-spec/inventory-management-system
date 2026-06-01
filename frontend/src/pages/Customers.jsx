@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
 
-export default function Customers({ showToast }) {
+export default function Customers({ user, showToast }) {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const isAdmin = user?.role === 'Admin';
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -109,9 +110,11 @@ export default function Customers({ showToast }) {
           <h1 className="page-title">Customer Register</h1>
           <p className="muted-text">Track accounts, emails, and active phone contacts</p>
         </div>
-        <button className="btn btn-primary" onClick={openAddModal}>
-          👤 Register Customer
-        </button>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={openAddModal}>
+            👤 Register Customer
+          </button>
+        )}
       </div>
 
       {/* Filter and Search */}
@@ -144,7 +147,7 @@ export default function Customers({ showToast }) {
                 <th>Email Address</th>
                 <th>Phone Number</th>
                 <th>Joined Date</th>
-                <th>Actions</th>
+                {isAdmin && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -155,15 +158,17 @@ export default function Customers({ showToast }) {
                   <td style={{ fontStyle: 'italic' }}>{customer.email}</td>
                   <td>{customer.phone_number}</td>
                   <td className="muted-text">{new Date(customer.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <button
-                      className="btn btn-danger"
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-                      onClick={() => handleDelete(customer.id)}
-                    >
-                      🗑️ Remove
-                    </button>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <button
+                        className="btn btn-danger"
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                        onClick={() => handleDelete(customer.id)}
+                      >
+                        🗑️ Remove
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

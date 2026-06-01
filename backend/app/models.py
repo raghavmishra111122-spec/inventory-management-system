@@ -71,3 +71,15 @@ class OrderItem(Base):
     __table_args__ = (
         CheckConstraint("quantity > 0", name="check_order_item_quantity_positive"),
     )
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, nullable=False)  # "Admin" or "Employee"
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+

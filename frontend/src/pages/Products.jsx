@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
 
-export default function Products({ showToast }) {
+export default function Products({ user, showToast }) {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  const isAdmin = user?.role === 'Admin';
+
 
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -130,9 +133,11 @@ export default function Products({ showToast }) {
           <h1 className="page-title">Product Catalog</h1>
           <p className="muted-text">Track materials, pricing structures, and inventory levels</p>
         </div>
-        <button className="btn btn-primary" onClick={openAddModal}>
-          ➕ Add New Product
-        </button>
+        {isAdmin && (
+          <button className="btn btn-primary" onClick={openAddModal}>
+            ➕ Add New Product
+          </button>
+        )}
       </div>
 
       {/* Filter and Search */}
@@ -166,7 +171,7 @@ export default function Products({ showToast }) {
                 <th>Unit Price</th>
                 <th>Stock Level</th>
                 <th>Status Pill</th>
-                <th>Actions</th>
+                {isAdmin && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -194,24 +199,26 @@ export default function Products({ showToast }) {
                         : 'Secure'}
                     </span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        className="btn btn-secondary"
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-                        onClick={() => openEditModal(product)}
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </td>
+                  {isAdmin && (
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          className="btn btn-secondary"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                          onClick={() => openEditModal(product)}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

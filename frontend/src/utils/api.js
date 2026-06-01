@@ -2,10 +2,19 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
+  
+  // Retrieve token from local storage
+  const token = localStorage.getItem('token');
+  
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  // Inject JWT Bearer Token if present
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
   const config = {
     ...options,
@@ -15,6 +24,18 @@ async function request(path, options = {}) {
   try {
     const response = await fetch(url, config);
     
+    // Auto-logout if unauthorized/token expired
+    if (response.status === 401 && path !== '/auth/login' && path !== '/auth/signup') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.dispatchEvent(new Event('auth-change'));
+      // Only redirect if we are not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+      throw new Error('Session expired. Please log in again.');
+    }
+
     // Handled HTTP 204 No Content
     if (response.status === 204) {
       return { success: true };
@@ -38,6 +59,12 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  // Auth
+  login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  signup: (userData) => request('/auth/signup', { method: 'POST', body: JSON.stringify(userData) }),
+  getProfile: () => request('/auth/profile'),
+  logout: () => request('/auth/logout', { method: 'POST' }),
+
   // Products
   getProducts: () => request('/products'),
   getProduct: (id) => request(`/products/${id}`),
@@ -61,3 +88,4 @@ export const api = {
   getDashboardSummary: () => request('/dashboard/summary'),
 };
 export default api;
+

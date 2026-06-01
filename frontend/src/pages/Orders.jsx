@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
 
-export default function Orders({ showToast }) {
+export default function Orders({ user, showToast }) {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isAdmin = user?.role === 'Admin';
+
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -217,13 +220,15 @@ export default function Orders({ showToast }) {
                       >
                         👁️ Invoice Details
                       </button>
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
-                        onClick={() => handleCancelOrder(order.id)}
-                      >
-                        ✕ Cancel / Delete
-                      </button>
+                      {isAdmin && (
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                          onClick={() => handleCancelOrder(order.id)}
+                        >
+                          ✕ Cancel / Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import List, Optional
 from decimal import Decimal
 from datetime import datetime
+
 
 # ==================== PRODUCT SCHEMAS ====================
 class ProductBase(BaseModel):
@@ -65,12 +66,51 @@ class CustomerBase(BaseModel):
 class CustomerCreate(CustomerBase):
     pass
 
-class CustomerOut(CustomerBase):
+# Helper to mask emails
+def mask_email(email: str) -> str:
+    if not email:
+        return ""
+    try:
+        parts = email.split("@")
+        if len(parts) == 2:
+            name, domain = parts
+            if len(name) <= 2:
+                masked_name = name[0] + "*" * (len(name) - 1)
+            else:
+                masked_name = name[0] + "*" * (len(name) - 2) + name[-1]
+            return f"{masked_name}@{domain}"
+    except Exception:
+        pass
+    return "******"
+
+class CustomerOut(BaseModel):
     id: int
+    full_name: str
+    email: str
+    phone_number: str
     created_at: datetime
+
+    @model_validator(mode="before")
+    @classmethod
+    def mask_customer_email(cls, data):
+        # We mask email to protect privacy for all queries of others
+        if hasattr(data, "email"):
+            return {
+                "id": data.id,
+                "full_name": data.full_name,
+                "email": mask_email(data.email),
+                "phone_number": data.phone_number,
+                "created_at": data.created_at
+            }
+        elif isinstance(data, dict) and "email" in data:
+            data_copy = data.copy()
+            data_copy["email"] = mask_email(data_copy["email"])
+            return data_copy
+        return data
 
     class Config:
         from_attributes = True
+
 
 
 # ==================== ORDER ITEM SCHEMAS ====================
@@ -128,3 +168,65 @@ class DashboardSummary(BaseModel):
     total_customers: int
     total_orders: int
     low_stock_products: List[LowStockProduct]
+
+
+# ==================== AUTHENTICATION SCHEMAS ====================
+class UserCreate(BaseModel):
+    full_name: str = Field(..., min_length=1)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    role: str = Field(..., description="Admin or Employee")
+
+    @field_validator('role')
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        if v not in ["Admin", "Employee"]:
+            raise ValueError("Role must be either 'Admin' or 'Employee'")
+        return v
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserOut(BaseModel):
+    id: int
+    full_name: str
+    email: str
+    role: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class UserOutMasked(BaseModel):
+    id: int
+    full_name: str
+    email: str
+    role: str
+    created_at: datetime
+
+    @model_validator(mode="before")
+    @classmethod
+    def mask_user_email(cls, data):
+        if hasattr(data, "email"):
+            return {
+                "id": data.id,
+                "full_name": data.full_name,
+                "email": mask_email(data.email),
+                "role": data.role,
+                "created_at": data.created_at
+            }
+        elif isinstance(data, dict) and "email" in data:
+            data_copy = data.copy()
+            data_copy["email"] = mask_email(data_copy["email"])
+            return data_copy
+        return data
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserOut
+
