@@ -1,0 +1,25 @@
+# Render Blueprints Configuration (Infrastructure as Code)
+# Link this repo on dashboard.render.com -> Blueprints to deploy database & backend automatically in one go!
+services:
+  - type: web
+    name: inventory-backend
+    runtime: docker
+    # Points to the backend directory as the build context for Docker
+    dockerContext: backend
+    dockerfilePath: Dockerfile # Relative to the dockerContext (backend/Dockerfile)
+    plan: free # Free instance type
+    envVars:
+      # Automatically binds the connection string of the database defined below
+      - key: DATABASE_URL
+        fromDatabase:
+          name: inventory-db
+          property: connectionString
+      # CORS Origins to allow frontend connection (comma-separated)
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173,http://localhost:3000"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+databases:
+  - name: inventory-db
+    plan: free
