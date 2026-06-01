@@ -16,7 +16,7 @@ services:
           property: connectionString
       # CORS Origins to allow frontend connection (comma-separated)
       - key: CORS_ORIGINS
-        value: "http://localhost:5173,http://localhost:3000"
+        value: "http://localhost:5173,http://localhost:3000,https://inventory-management-system-one-kappa.vercel.app"
       - key: PYTHONUNBUFFERED
         value: "1"
 
